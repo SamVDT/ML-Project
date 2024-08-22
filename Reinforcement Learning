@@ -1,0 +1,220 @@
+import gym
+import numpy as np
+
+# Create the MountainCar environment with a render mode
+env = gym.make('MountainCar-v0', render_mode='human')
+
+# Reset the environment to its default starting position
+env.reset()
+
+# Visualize the environment
+env.render()
+
+# Reset the environment to its starting position
+obs = env.reset()
+for _ in range(100):  # loop for 100 time steps
+    # Drive the car to the right
+    next_obs, reward, done, truncated, info = env.step(2)
+    env.render()
+
+next_obs = env.reset()
+
+# Handle both older and newer versions of the Gym API
+if isinstance(next_obs, tuple):
+    observation = next_obs[0]
+else:
+    observation = next_obs
+
+for _ in range(1000):  
+    # Decide what our next action should be based on our current observation
+    if observation[1] > 0:
+        action = 2
+    else:
+        action = 0
+    
+    next_obs, reward, done, truncated, info = env.step(action)
+    
+    # Handle both older and newer versions of the Gym API
+    if isinstance(next_obs, tuple):
+        observation = next_obs[0]
+    else:
+        observation = next_obs
+    
+    # If we've won, stop playing
+    if done or truncated:
+        break
+        
+    env.render()
+
+# Choose number of grid points to use
+n_grid = 10 
+# Calculate grids to discretize observations
+gridspace = {}
+for ii, s in enumerate(zip(env.observation_space.low, env.observation_space.high)):
+    gridspace[ii] = np.linspace(s[0], s[1], n_grid)
+
+# Define a function that makes it easy to get our discretized indices from an observation
+def get_discretized_observation(observation):
+    index = np.array([np.argmin(np.abs(grid-observation[ii]))
+                      for (ii, grid) in gridspace.items()])
+    return index
+
+value_function = np.zeros([n_grid]*2)
+print(f'Our value function has {len(value_function.flatten())} values, one for each state.')
+
+def run_episode():
+    ''' Collect data from a single episode. '''
+    data = {}
+    next_obs = env.reset()
+
+    if isinstance(next_obs, tuple):
+        observation = next_obs[0]
+    else:
+        observation = next_obs
+    
+    for t in range(100):
+        if observation[1] > 0:
+            action = 2
+        else:
+            action = 0
+        next_obs, reward, done, truncated, info = env.step(action)
+
+        if isinstance(next_obs, tuple):
+            observation = next_obs[0]
+        else:
+            observation = next_obs
+
+        data[t] = {'observation': observation, 'reward': reward,
+                   'done': done, 'info': info, 'action': action}
+        if done or truncated:
+            break
+    return data
+
+# Prepare our value function, initializing each state to be infinitely unrewarding
+value_function = -np.infty * np.ones([n_grid]*2)
+state_counts = np.zeros([n_grid]*2)
+n_episodes = 10000
+
+for ep in range(n_episodes):
+    data = run_episode()
+    
+    times = np.array([t for t in data.keys()])
+    
+    total_episode_reward = 0
+    
+    for t in range(times[-1], -1, -1):
+        total_episode_reward += data[t]['reward']
+        ii = get_discretized_observation(data[t]['observation'])
+        
+        if value_function[ii[0], ii[1]] == -np.infty:
+            value_function[ii[0], ii[1]] = 0.0
+        
+        state_counts[ii[0], ii[1]] += 1  # state counter
+        value_function[ii[0], ii[1]] += total_episode_reward
+
+value_function[state_counts > 0] = value_function[state_counts > 0] / state_counts[state_counts > 0]
+
+# Prepare our action-value function, initializing each state to be infinitely unrewarding
+action_value_function = -np.infty * np.ones([n_grid]*2 + [3])
+print(f'Our action-value function has {len(action_value_function.flatten())} entries.')
+
+state_counts = np.zeros([n_grid]*2 + [3])
+
+for ep in range(n_episodes):
+    data = run_episode()
+    
+    times = np.array([t for t in data.keys()])
+    
+    total_episode_reward = 0
+    
+    for t in range(times[-1], -1, -1):
+        total_episode_reward += data[t]['reward']
+        ii = get_discretized_observation(data[t]['observation'])
+        
+        if action_value_function[ii[0], ii[1], data[t]['action']] == -np.infty:
+            action_value_function[ii[0], ii[1], data[t]['action']] = 0.0
+        
+        state_counts[ii[0], ii[1], data[t]['action']] += 1  # state counter
+        action_value_function[ii[0], ii[1], data[t]['action']] += total_episode_reward
+
+action_value_function[state_counts > 0] = action_value_function[state_counts > 0] / state_counts[state_counts > 0]
+
+obs = env.reset()
+
+if isinstance(obs, tuple):
+    observation = obs[0]
+else:
+    observation = obs
+
+for _ in range(100): 
+    ii = get_discretized_observation(observation)
+    action = np.argmax(action_value_function[ii[0], ii[1]])
+    obs, reward, done, truncated, info = env.step(action)
+
+    if isinstance(obs, tuple):
+        observation = obs[0]
+    else:
+        observation = obs
+
+    env.render()
+    if done or truncated:
+        break
+
+alpha = .15
+Q = np.zeros([n_grid]*2 + [3])
+n_episodes = 2000
+
+for ep in range(n_episodes):
+    obs = env.reset()
+
+    if isinstance(obs, tuple):
+        observation = obs[0]
+    else:
+        observation = obs
+
+    ii = get_discretized_observation(observation)
+    action = np.random.choice([0, 1, 2]) 
+    
+    for t in range(100):
+        next_obs, reward, done, truncated, info = env.step(action)
+
+        if isinstance(next_obs, tuple):
+            observation = next_obs[0]
+        else:
+            observation = next_obs
+
+        next_ii = get_discretized_observation(observation)
+        next_action = np.argmax(Q[next_ii[0], next_ii[1]])
+        
+        if done or truncated:
+            if np.mod(ep, 100) == 0:
+                print(f'Episode ended after {t} steps')
+            if t < 199:
+                Q[ii[0], ii[1], action] += alpha * (1 - Q[ii[0], ii[1], action])
+            break
+        else:
+            Q[ii[0], ii[1], action] += alpha * (reward + np.max(Q[next_ii[0], next_ii[1]]) - Q[ii[0], ii[1], action])
+        action = next_action
+        obs = next_obs
+        ii = next_ii
+
+obs = env.reset()
+
+if isinstance(obs, tuple):
+    observation = obs[0]
+else:
+    observation = obs
+
+for _ in range(1000): 
+    ii = get_discretized_observation(observation)
+    action = np.argmax(Q[ii[0], ii[1]])
+    obs, reward, done, truncated, info = env.step(action)
+
+    if isinstance(obs, tuple):
+        observation = obs[0]
+    else:
+        observation = obs
+
+    env.render()
+    if done or truncated:
+        break
