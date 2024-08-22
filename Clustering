@@ -1,0 +1,82 @@
+# Import Libraries
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data[:, :2]  # Select first two features which are sepal length and sepal width
+
+# Start KMeans
+kmeans = KMeans(
+    n_clusters=3, init='random', # How many clusters to form and choose center randomly
+    n_init=1, max_iter=4, #
+    tol=1e-04, random_state=2
+)
+y_km = kmeans.fit_predict(X)
+
+# Plot decision boundaries
+h = .01  # Step size of the mesh
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1 # Calculates min and max of sepal length
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1 # Calculates min and max of sepal width
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h)) # Creates mesh grid across the range of x and y
+
+# Predict cluster labels for each point in the mesh
+Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()]) # Turns x and y into a 2D array
+Z = Z.reshape(xx.shape) # Adjusts the size of the array
+
+# Plot clusters and boundaries
+plt.figure(figsize=(10, 8)) # Specify size
+plt.imshow(Z, interpolation='nearest', # Nearest neighbour interpolation
+           extent=(xx.min(), xx.max(), yy.min(), yy.max()), # Bounds of graph
+           cmap=plt.cm.Paired,
+           aspect='auto', origin='lower')
+
+# Plot the clusters with sepal lengths and widths
+plt.scatter(
+    X[y_km == 0, 0], X[y_km == 0, 1],
+    s=50, c='lightgreen', # Set size of points and background colour
+    marker='s', edgecolor='black', # Marker shape and make the colours clearer to distinguish
+    label='Cluster 1' # Label for the key
+)
+
+plt.scatter(
+    X[y_km == 1, 0], X[y_km == 1, 1],
+    s=50, c='orange',
+    marker='o', edgecolor='black',
+    label='Cluster 2'
+)
+
+plt.scatter(
+    X[y_km == 2, 0], X[y_km == 2, 1],
+    s=50, c='lightblue',
+    marker='v', edgecolor='black',
+    label='Cluster 3'
+)
+
+# Plot the centroids
+plt.scatter(
+    kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], # Gets coordinates of centroids
+    s=250, marker='*', # Set size and shape
+    c='red', edgecolor='black', # Set colour and edge colour
+    label='Centroids' # Label for key
+)
+
+# Labeling the axes with lengths
+plt.xlabel('Sepal length (cm)')
+plt.ylabel('Sepal width (cm)')
+
+# Set the x and y axis limits to actual data ranges
+plt.xlim(x_min, x_max) # Extends x to the largest value (with padding)
+plt.ylim(y_min, y_max) # Extends y to the largest value (with padding)
+
+# Show tick marks on the axes
+plt.xticks(np.arange(np.floor(X[:, 0].min()), np.ceil(X[:, 0].max()) + 1, 0.5)) # Plots the ticks for easy reading
+plt.yticks(np.arange(np.floor(X[:, 1].min()), np.ceil(X[:, 1].max()) + 1, 0.5)) # Plots the ticks for easy reading
+
+# Add the legend
+plt.legend(scatterpoints=1)
+
+# Show plot
+plt.show()
