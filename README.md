@@ -17,3 +17,11 @@ For my Clustering, I used a data set from Scikit, which shows information about 
 ## Reinforcement Learning (10 Marks)
 Reinforcement learning is a machine learning technique that trains something to make decisions that achieve the most best results, this is done by rewarding the algorithm when it makes a desired step. 
 For my Reinforcement Learning, I used the MountainCar-v0 environment. I created the environment so I could see how the car moves and reset it to start over. Then, I divided the game’s world into a grid to keep track of where the car is and played the game many times and updated the grid with rewards based on the car’s actions. I used these rewards to optimise the algorithm and testing the model with different parameters
+
+
+## Bibliography
+Intuitive Machine Learning. “K Means Clustering | Explained with Jupyter Notebook | Machine Learning Basics.” YouTube, 18 Apr. 2020, www.youtube.com/watch?v=mEGYznC6F9s.Machine Yearner. 
+
+“Simple Reinforcement Learning in Python - Machine Yearner - Medium.” Medium, Medium, 26 Aug. 2021, medium.com/@MachineLearningYearning/simple-reinforcement-learning-in-python-2340c4df8c04.
+
+“The Iris Dataset.” Scikit-Learn, scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html.
