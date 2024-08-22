@@ -20,8 +20,8 @@ For my Reinforcement Learning, I used the MountainCar-v0 environment. I created 
 
 
 ## Bibliography
-Intuitive Machine Learning. “K Means Clustering | Explained with Jupyter Notebook | Machine Learning Basics.” YouTube, 18 Apr. 2020, www.youtube.com/watch?v=mEGYznC6F9s.Machine Yearner. 
+Intuitive Machine Learning. “K Means Clustering | Explained with Jupyter Notebook | Machine Learning Basics.” YouTube, 18 Apr. 2020, www.youtube.com/watch?v=mEGYznC6F9s.
 
-“Simple Reinforcement Learning in Python - Machine Yearner - Medium.” Medium, Medium, 26 Aug. 2021, medium.com/@MachineLearningYearning/simple-reinforcement-learning-in-python-2340c4df8c04.
+Machine Yearner. “Simple Reinforcement Learning in Python - Machine Yearner - Medium.” Medium, Medium, 26 Aug. 2021, medium.com/@MachineLearningYearning/simple-reinforcement-learning-in-python-2340c4df8c04.
 
 “The Iris Dataset.” Scikit-Learn, scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html.
