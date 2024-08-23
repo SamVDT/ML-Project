@@ -1,13 +1,14 @@
+# Import Libraries
 import gym
 import numpy as np
 
-# Create the MountainCar environment with a render mode
+# Environment Setup
 env = gym.make('MountainCar-v0', render_mode='human')
 
 # Reset the environment to its default starting position
 env.reset()
 
-# Visualize the environment
+# Render the environment
 env.render()
 
 # Reset the environment to its starting position
@@ -18,13 +19,14 @@ for _ in range(100):  # loop for 100 time steps
     env.render()
 
 next_obs = env.reset()
+# Handles both versions fo GymApi
 
-# Handle both older and newer versions of the Gym API
 if isinstance(next_obs, tuple):
     observation = next_obs[0]
 else:
     observation = next_obs
 
+# The agent keeps driving right (action = 2), otherwise, it moves left (action = 0).
 for _ in range(1000):  
     # Decide what our next action should be based on our current observation
     if observation[1] > 0:
@@ -50,18 +52,19 @@ for _ in range(1000):
 n_grid = 10 
 # Calculate grids to discretize observations
 gridspace = {}
-for ii, s in enumerate(zip(env.observation_space.low, env.observation_space.high)):
+for ii, s in enumerate(zip(env.observation_space.low, env.observation_space.high)): # Equally spaced grid spaces
     gridspace[ii] = np.linspace(s[0], s[1], n_grid)
 
-# Define a function that makes it easy to get our discretized indices from an observation
+# Define a function that makes discrete values from continious data
 def get_discretized_observation(observation):
     index = np.array([np.argmin(np.abs(grid-observation[ii]))
                       for (ii, grid) in gridspace.items()])
     return index
 
-value_function = np.zeros([n_grid]*2)
-print(f'Our value function has {len(value_function.flatten())} values, one for each state.')
+value_function = np.zeros([n_grid]*2) # 2D Array
+print(f'Our value function has {len(value_function.flatten())} values, one for each state.') # Prints number of discrete states
 
+# Simulates one episode and records observations, rewards, and actions in a dictionary.
 def run_episode():
     ''' Collect data from a single episode. '''
     data = {}
@@ -95,6 +98,7 @@ value_function = -np.infty * np.ones([n_grid]*2)
 state_counts = np.zeros([n_grid]*2)
 n_episodes = 10000
 
+# Runs multiple episodes using the Monte Carlo method (averaging rewards over multiple visits to each state).
 for ep in range(n_episodes):
     data = run_episode()
     
@@ -114,7 +118,7 @@ for ep in range(n_episodes):
 
 value_function[state_counts > 0] = value_function[state_counts > 0] / state_counts[state_counts > 0]
 
-# Prepare our action-value function, initializing each state to be infinitely unrewarding
+# Prepare our action-value function, initialisding each state to be infinitely unrewarding
 action_value_function = -np.infty * np.ones([n_grid]*2 + [3])
 print(f'Our action-value function has {len(action_value_function.flatten())} entries.')
 
@@ -160,6 +164,7 @@ for _ in range(100):
     if done or truncated:
         break
 
+# Q Learning algorithm, with learning rate of alpha
 alpha = .15
 Q = np.zeros([n_grid]*2 + [3])
 n_episodes = 2000
@@ -198,6 +203,7 @@ for ep in range(n_episodes):
         obs = next_obs
         ii = next_ii
 
+# Tests the algorithm by running it in the environment. The algorithm selects actions based on the learned Q table and the current observation.
 obs = env.reset()
 
 if isinstance(obs, tuple):
